@@ -1,41 +1,252 @@
-export const HEBREW_MONTHS = [
-  'ניסן', 'אייר', 'סיון', 'תמוז', 'אב', 'אלול',
-  'תשרי', 'חשון', 'כסלו', 'טבת', 'שבט', 'אדר'
-];
+export function parseHebrewDate(filename) {
+  const base = filename.replace(/\.[^.]+$/, '');
+  const yearMatch = base.match(/\b(5[67]\d{2})\b/);
+  const year = yearMatch ? yearMatch[1] : null;
 
-export function formatDuration(minutes) {
-  if (!minutes) return '—';
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  const months = [
+    'Tishrei', 'Cheshvan', 'Kislev', 'Teves', 'Teives', 'Shvat', 'Shevat', 'Adar',
+    'Adar I', 'Adar II', 'Nissan', 'Iyar', 'Sivan', 'Tammuz', 'Tamuz',
+    'Av', 'Elul',
+  ];
+  let month = null;
+  const lowerBase = base.toLowerCase().replace(/[-_]/g, ' ');
+  for (const m of months) {
+    if (lowerBase.includes(m.toLowerCase())) {
+      month = m;
+      break;
+    }
+  }
+
+  const dayMatch = base.match(/(?:^|[-_ ])(\d{1,2})(?:$|[-_ .])/);
+  const day = dayMatch ? parseInt(dayMatch[1], 10) : null;
+
+  return { year, month, day };
 }
 
-export function truncate(str, len = 50) {
-  if (!str) return '';
-  return str.length > len ? str.slice(0, len) + '...' : str;
+export function normalizeYiddish(text) {
+  if (!text) return '';
+  let result = text;
+  // Strip nikkud and cantillation marks (U+0591-U+05C7)
+  result = result.replace(/[\u0591-\u05C7]/g, '');
+  // Strip punctuation (keep Hebrew letters U+05D0-U+05EA, spaces, and basic alphanumerics)
+  result = result.replace(/[^\u05D0-\u05F4\w\s]/g, '');
+  // Lowercase any Latin characters
+  result = result.toLowerCase();
+  // Collapse whitespace
+  result = result.replace(/\s+/g, ' ').trim();
+  return result;
 }
 
-export function debounce(fn, ms = 300) {
+export function levenshtein(refWords, hypWords) {
+  const n = refWords.length;
+  const m = hypWords.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+
+  for (let i = 0; i <= n; i++) dp[i][0] = i;
+  for (let j = 0; j <= m; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (refWords[i - 1] === hypWords[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(
+          dp[i - 1][j - 1], // substitution
+          dp[i - 1][j],     // deletion
+          dp[i][j - 1],     // insertion
+        );
+      }
+    }
+  }
+
+  // Backtrace to get operations
+  const operations = [];
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && refWords[i - 1] === hypWords[j - 1]) {
+      operations.unshift({ type: 'C', ref: refWords[i - 1], hyp: hypWords[j - 1] });
+      i--; j--;
+    } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+      operations.unshift({ type: 'S', ref: refWords[i - 1], hyp: hypWords[j - 1] });
+      i--; j--;
+    } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+      operations.unshift({ type: 'D', ref: refWords[i - 1], hyp: null });
+      i--;
+    } else {
+      operations.unshift({ type: 'I', ref: null, hyp: hypWords[j - 1] });
+      j--;
+    }
+  }
+
+  return { distance: dp[n][m], operations };
+}
+
+// Distance-only Levenshtein using two-row DP — O(min(n,m)) space, no operation tracking.
+// Used for CER where character arrays can be very large.
+export function levenshteinDistance(a, b) {
+  // Ensure we iterate over the shorter dimension for space efficiency
+  if (a.length < b.length) { const t = a; a = b; b = t; }
+  const m = b.length;
+  let prev = new Array(m + 1);
+  let curr = new Array(m + 1);
+  for (let j = 0; j <= m; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= m; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        curr[j] = prev[j - 1];
+      } else {
+        curr[j] = 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
+      }
+    }
+    const tmp = prev; prev = curr; curr = tmp;
+  }
+  return prev[m];
+}
+
+export function calculateWER(reference, hypothesis) {
+  const refNorm = normalizeYiddish(reference);
+  const hypNorm = normalizeYiddish(hypothesis);
+  const refWords = refNorm.split(/\s+/).filter(Boolean);
+  const hypWords = hypNorm.split(/\s+/).filter(Boolean);
+
+  // CER: character-level using distance-only Levenshtein (fast, O(min(n,m)) space)
+  const refChars = refNorm.replace(/\s/g, '');
+  const hypChars = hypNorm.replace(/\s/g, '');
+  const charDist = levenshteinDistance(refChars.split(''), hypChars.split(''));
+  const cer = refChars.length > 0 ? charDist / refChars.length : (hypChars.length > 0 ? 1 : 0);
+
+  if (refWords.length === 0) {
+    return { wer: hypWords.length > 0 ? 1 : 0, cer, substitutions: 0, insertions: hypWords.length, deletions: 0, total: 0 };
+  }
+
+  const { distance, operations } = levenshtein(refWords, hypWords);
+  const substitutions = operations.filter(o => o.type === 'S').length;
+  const insertions = operations.filter(o => o.type === 'I').length;
+  const deletions = operations.filter(o => o.type === 'D').length;
+  const wer = distance / refWords.length;
+
+  return { wer, cer, substitutions, insertions, deletions, total: refWords.length };
+}
+
+export function generateSRT(words) {
+  if (!words || words.length === 0) return '';
+  const segments = groupWordSegments(words);
+  const lines = [];
+  segments.forEach((seg, i) => {
+    lines.push(String(i + 1));
+    lines.push(`${formatSRTTime(seg.start)} --> ${formatSRTTime(seg.end)}`);
+    lines.push(seg.text);
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+export function generateVTT(words) {
+  if (!words || words.length === 0) return '';
+  const segments = groupWordSegments(words);
+  const lines = ['WEBVTT', ''];
+  segments.forEach((seg, i) => {
+    lines.push(String(i + 1));
+    lines.push(`${formatVTTTime(seg.start)} --> ${formatVTTTime(seg.end)}`);
+    lines.push(seg.text);
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+function groupWordSegments(words) {
+  const segments = [];
+  let current = null;
+
+  for (const w of words) {
+    if (!current) {
+      current = { start: w.start, end: w.end, words: [w.word] };
+    } else if (w.start - current.end > 0.5 || current.words.length >= 10) {
+      current.text = current.words.join(' ');
+      segments.push(current);
+      current = { start: w.start, end: w.end, words: [w.word] };
+    } else {
+      current.end = w.end;
+      current.words.push(w.word);
+    }
+  }
+  if (current) {
+    current.text = current.words.join(' ');
+    segments.push(current);
+  }
+  return segments;
+}
+
+function formatSubtitleTime(seconds, separator) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const ms = Math.min(Math.round((seconds % 1) * 1000), 999);
+  return `${pad(h)}:${pad(m)}:${pad(s)}${separator}${String(ms).padStart(3, '0')}`;
+}
+
+function formatSRTTime(seconds) {
+  return formatSubtitleTime(seconds, ',');
+}
+
+function formatVTTTime(seconds) {
+  return formatSubtitleTime(seconds, '.');
+}
+
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+export function exportCSV(rows, columns) {
+  const header = columns.map(c => `"${c.label}"`).join(',');
+  const body = rows.map(row =>
+    columns.map(c => {
+      const val = typeof c.value === 'function' ? c.value(row) : row[c.key];
+      const str = val == null ? '' : String(val).replace(/[\r\n]+/g, ' ').replace(/"/g, '""');
+      return `"${str}"`;
+    }).join(',')
+  );
+  const csv = [header, ...body].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `divrei-yoel-asr-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function truncateWords(text, n) {
+  if (!text) return '';
+  const words = text.split(/\s+/);
+  if (words.length <= n) return text;
+  return words.slice(0, n).join(' ') + '...';
+}
+
+export function formatConfidence(score) {
+  if (score == null) return '\u2014';
+  return Math.round(score * 100) + '%';
+}
+
+export function debounce(fn, ms) {
   let timer;
-  return (...args) => {
+  return function (...args) {
     clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
+    timer = setTimeout(() => fn.apply(this, args), ms);
   };
 }
 
-export function getPipelineStatus(audioId, state) {
-  if (state.reviews[audioId]?.status === 'approved') return 'approved';
-  if (state.reviews[audioId]?.status === 'rejected') return 'rejected';
-  if (state.alignments[audioId]) return 'aligned';
-  if (state.cleaning[audioId]) return 'cleaned';
-  if (state.mappings[audioId]) return 'mapped';
-  return 'unmapped';
+export function getConfidenceLevel(conf) {
+  return conf >= 0.8 ? 'high' : conf >= 0.4 ? 'mid' : 'low';
 }
 
-export function statusBadgeClass(status) {
-  const map = {
-    unmapped: 'badge-gray', mapped: 'badge-blue', cleaned: 'badge-yellow',
-    aligned: 'badge-orange', approved: 'badge-green', rejected: 'badge-red'
-  };
-  return map[status] || 'badge-gray';
+export function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType || 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }

@@ -1,74 +1,61 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="yi" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>דברי יואל - ASR Workbench</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דברי יואל — ASR Workbench</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>דברי יואל — ASR Workbench</h1>
-    <nav id="toolbar">
-      <button id="btn-asr-settings">ASR Settings</button>
-      <button id="btn-export-state">Export State</button>
-      <button id="btn-export-csv">Export CSV</button>
-      <button id="btn-import-state">Import State</button>
-      <button id="btn-sign-out">Sign Out</button>
-    </nav>
+  <header class="app-header">
+    <h1 class="app-title">דברי יואל — ASR Workbench</h1>
+    <div class="toolbar">
+      <button id="btn-asr-settings" class="toolbar-btn" title="Configure ASR providers">ASR Settings</button>
+      <button id="btn-export-state" class="toolbar-btn" title="Export State (JSON)">Export State</button>
+      <button id="btn-import-state" class="toolbar-btn" title="Import State (JSON)">Import State</button>
+      <input type="file" id="import-file-input" accept=".json" hidden />
+      <button id="btn-export-csv" class="toolbar-btn" title="Export Approved as CSV">Export CSV</button>
+      <button id="btn-logout" class="toolbar-btn" title="Sign out">Sign Out</button>
+    </div>
   </header>
 
-  <section id="filter-bar">
-    <div class="filter-group" id="collection-filters">
-      <span class="filter-label">Collection:</span>
-      <button class="filter-btn active" data-filter="all">All <span class="badge" id="badge-all">0</span></button>
-      <button class="filter-btn" data-filter="unmapped">Unmapped <span class="badge" id="badge-unmapped">0</span></button>
-      <button class="filter-btn" data-filter="mapped">Mapped <span class="badge" id="badge-mapped">0</span></button>
-      <button class="filter-btn" data-filter="cleaned">Cleaned <span class="badge" id="badge-cleaned">0</span></button>
-      <button class="filter-btn" data-filter="aligned">Aligned <span class="badge" id="badge-aligned">0</span></button>
-      <button class="filter-btn" data-filter="approved">Approved <span class="badge" id="badge-approved">0</span></button>
+  <nav class="filter-bar">
+    <div class="filter-group">
+      <span class="filter-group-label">Collection</span>
+      <div class="filter-pills">
+        <button class="filter-pill active" data-filter="all">All <span class="badge" id="count-all">0</span></button>
+        <button class="filter-pill" data-filter="unmapped">Unmapped <span class="badge" id="count-unmapped">0</span></button>
+        <button class="filter-pill" data-filter="mapped">Mapped <span class="badge" id="count-mapped">0</span></button>
+        <button class="filter-pill" data-filter="cleaned">Cleaned <span class="badge" id="count-cleaned">0</span></button>
+        <button class="filter-pill" data-filter="aligned">Aligned <span class="badge" id="count-aligned">0</span></button>
+        <button class="filter-pill" data-filter="approved">Approved <span class="badge" id="count-approved">0</span></button>
+      </div>
     </div>
-    <div class="filter-group" id="metadata-filters">
-      <select id="filter-year"><option value="">Year</option></select>
-      <select id="filter-month"><option value="">Month</option></select>
-      <select id="filter-type"><option value="">Type</option></select>
-      <input type="search" id="filter-search" placeholder="Search...">
+    <div class="filter-controls">
+      <select id="filter-year" class="filter-select"><option value="">All Years</option></select>
+      <select id="filter-month" class="filter-select"><option value="">All Months</option></select>
+      <select id="filter-type" class="filter-select"><option value="">All Types</option></select>
+      <input type="text" id="search-input" class="search-input" placeholder="Search..." />
     </div>
-  </section>
+  </nav>
 
-  <section id="bulk-actions" style="display:none">
-    <span id="selected-count">0 selected</span>
-    <button id="btn-clean-selected">Clean Selected</button>
-    <button id="btn-align-selected">Align Selected</button>
-    <button id="btn-approve-selected">Approve Selected</button>
-  </section>
-
-  <main>
-    <table id="audio-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th><input type="checkbox" id="select-all"></th>
-          <th>Name</th>
-          <th>Year</th>
-          <th>Month</th>
-          <th>Day</th>
-          <th>Type</th>
-          <th>Duration</th>
-          <th>Status</th>
-          <th>Mapping</th>
-          <th>Comments</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
+  <main class="table-container" id="table-container">
+    <!-- Table rendered by src/table.js -->
   </main>
 
-  <div id="progress-overlay" style="display:none">
-    <div class="progress-content">
-      <h3 id="progress-title">Processing...</h3>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <span id="progress-text">0 / 0</span>
+  <footer class="bulk-action-bar" id="bulk-action-bar">
+    <span class="bulk-selection-count" id="bulk-selection-count">0 selected</span>
+    <button class="bulk-btn" id="btn-clean-selected">Clean Selected</button>
+    <button class="bulk-btn" id="btn-align-selected">Align Selected</button>
+    <button class="bulk-btn bulk-btn-approve" id="btn-approve-selected">Approve Selected</button>
+  </footer>
+
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-content" id="modal-content">
+        <!-- Search modal, karaoke player, or benchmark config injected here -->
+      </div>
     </div>
   </div>
 

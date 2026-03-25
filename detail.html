@@ -1,84 +1,56 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="yi" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>דברי יואל - Detail View</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דברי יואל — Detail</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
-<body class="detail-page">
-  <header>
-    <a href="/" class="back-link">&larr; Back to Table</a>
-    <h1 id="file-title">Loading...</h1>
+<body>
+  <header class="app-header">
+    <a href="/" class="app-title" style="text-decoration:none;">דברי יואל — ASR Workbench</a>
+    <div class="toolbar">
+      <button id="btn-back" class="toolbar-btn">Back to Table</button>
+      <button id="btn-logout" class="toolbar-btn" title="Sign out">Sign Out</button>
+    </div>
   </header>
 
-  <main class="detail-layout">
-    <section class="detail-left">
-      <h2>Audio</h2>
-      <audio id="audio-player" controls preload="none"></audio>
-      <div id="audio-info">
-        <span id="duration-display"></span>
-      </div>
-      <div id="trim-controls">
-        <label>Trim Start: <input type="number" id="trim-start" step="0.1" min="0" value="0"> s</label>
-        <label>Trim End: <input type="number" id="trim-end" step="0.1" min="0" value="0"> s</label>
-      </div>
-      <div id="video-export-section">
-        <h3>Video Export</h3>
-        <label>Snippet Start: <input type="number" id="snippet-start" step="0.1" min="0" value="0"> s</label>
-        <label>Snippet End: <input type="number" id="snippet-end" step="0.1" min="0" value="0"> s</label>
-        <select id="bg-template">
-          <option value="gradient-blue">Blue Gradient</option>
-          <option value="gradient-gold">Gold Gradient</option>
-          <option value="dark-elegant">Dark Elegant</option>
-          <option value="parchment">Parchment</option>
-        </select>
-        <button id="btn-export-video">Export MP4 Video</button>
-        <div id="export-progress" style="display:none">
-          <div class="progress-bar"><div class="progress-fill" id="export-progress-fill"></div></div>
-          <span id="export-progress-text">Generating...</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="detail-center">
-      <div id="transcript-header">
-        <h2>Transcript</h2>
-        <select id="version-select">
-          <option value="manual">Manual</option>
-          <option value="cleaned">Cleaned</option>
-          <option value="edited">Edited</option>
-        </select>
-      </div>
-      <div id="diff-view">
-        <div id="original-text" class="text-panel">
-          <h3>Original</h3>
-          <div class="text-content" id="original-content"></div>
-        </div>
-        <div id="cleaned-text" class="text-panel">
-          <h3>Cleaned / Aligned</h3>
-          <div class="text-content" id="cleaned-content"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="detail-right">
-      <h2>Review</h2>
-      <div id="alignment-info">
-        <p>Avg Confidence: <span id="avg-confidence">&mdash;</span></p>
-        <p>Low Confidence Words: <span id="low-confidence-count">&mdash;</span></p>
-      </div>
-      <div id="review-actions">
-        <button id="btn-approve" class="btn-success">Approve</button>
-        <button id="btn-reject" class="btn-danger">Reject</button>
-        <button id="btn-skip" class="btn-secondary">Skip</button>
-      </div>
-      <div id="transcript-meta">
-        <p>Date: <span id="meta-date">&mdash;</span></p>
-        <p>First Line: <span id="meta-first-line">&mdash;</span></p>
-      </div>
-    </section>
+  <main class="detail-page" id="detail-page">
+    <!-- Rendered by src/detail.js -->
   </main>
+
+  <!-- Video Export Section (unique to Divrei Yoel) -->
+  <div id="video-export-overlay" style="display:none;">
+    <div class="video-export-panel">
+      <h3 class="video-export-title">Video Export</h3>
+      <div class="video-export-controls">
+        <label class="video-export-label">
+          Snippet Start (s)
+          <input type="number" id="snippet-start" step="0.1" min="0" value="0" class="video-export-input" />
+        </label>
+        <label class="video-export-label">
+          Snippet End (s)
+          <input type="number" id="snippet-end" step="0.1" min="0" value="0" class="video-export-input" />
+        </label>
+        <label class="video-export-label">
+          Background Template
+          <select id="bg-template" class="video-export-select">
+            <option value="gradient-blue">Blue Gradient</option>
+            <option value="gradient-gold">Gold Gradient</option>
+            <option value="dark-elegant">Dark Elegant</option>
+            <option value="parchment">Parchment</option>
+          </select>
+        </label>
+        <button id="btn-export-video" class="video-export-btn">Export MP4 Video</button>
+        <div id="export-progress" style="display:none;">
+          <div class="video-export-progress-bar">
+            <div class="video-export-progress-fill" id="export-progress-fill"></div>
+          </div>
+          <span id="export-progress-text" class="video-export-progress-text">Generating...</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="/src/detail.js"></script>
 </body>
