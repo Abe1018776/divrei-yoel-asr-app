@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דברי יואל - ASR Workbench</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>דברי יואל — ASR Workbench</h1>
+    <nav id="toolbar">
+      <button id="btn-asr-settings">ASR Settings</button>
+      <button id="btn-export-state">Export State</button>
+      <button id="btn-export-csv">Export CSV</button>
+      <button id="btn-import-state">Import State</button>
+      <button id="btn-sign-out">Sign Out</button>
+    </nav>
+  </header>
+
+  <section id="filter-bar">
+    <div class="filter-group" id="collection-filters">
+      <span class="filter-label">Collection:</span>
+      <button class="filter-btn active" data-filter="all">All <span class="badge" id="badge-all">0</span></button>
+      <button class="filter-btn" data-filter="unmapped">Unmapped <span class="badge" id="badge-unmapped">0</span></button>
+      <button class="filter-btn" data-filter="mapped">Mapped <span class="badge" id="badge-mapped">0</span></button>
+      <button class="filter-btn" data-filter="cleaned">Cleaned <span class="badge" id="badge-cleaned">0</span></button>
+      <button class="filter-btn" data-filter="aligned">Aligned <span class="badge" id="badge-aligned">0</span></button>
+      <button class="filter-btn" data-filter="approved">Approved <span class="badge" id="badge-approved">0</span></button>
+    </div>
+    <div class="filter-group" id="metadata-filters">
+      <select id="filter-year"><option value="">Year</option></select>
+      <select id="filter-month"><option value="">Month</option></select>
+      <select id="filter-type"><option value="">Type</option></select>
+      <input type="search" id="filter-search" placeholder="Search...">
+    </div>
+  </section>
+
+  <section id="bulk-actions" style="display:none">
+    <span id="selected-count">0 selected</span>
+    <button id="btn-clean-selected">Clean Selected</button>
+    <button id="btn-align-selected">Align Selected</button>
+    <button id="btn-approve-selected">Approve Selected</button>
+  </section>
+
+  <main>
+    <table id="audio-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th><input type="checkbox" id="select-all"></th>
+          <th>Name</th>
+          <th>Year</th>
+          <th>Month</th>
+          <th>Day</th>
+          <th>Type</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Mapping</th>
+          <th>Comments</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </main>
+
+  <div id="progress-overlay" style="display:none">
+    <div class="progress-content">
+      <h3 id="progress-title">Processing...</h3>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <span id="progress-text">0 / 0</span>
+    </div>
+  </div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
