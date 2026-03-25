@@ -8,9 +8,16 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 // ── Supabase config ──────────────────────────────────────────────
-const SUPABASE_URL = "https://yfxhvmajmklxandwugts.supabase.co";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmeGh2bWFqbWtseGFuZHd1Z3RzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ2MTIyNCwiZXhwIjoyMDkwMDM3MjI0fQ.hOtG4bQvIt-Vbi_Jd5ydddy2MNQJWZfYnc1qDfPwT5c";
+// Set these as environment variables before running:
+//   SUPABASE_URL=https://your-project.supabase.co
+//   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error("Error: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.");
+  process.exit(1);
+}
 
 const SAMPLES_DIR =
   "C:/Users/ChezkyKohn/maatikei-hashmua/2_sample_sets_to_test_on";
